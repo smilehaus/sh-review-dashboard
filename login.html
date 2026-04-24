@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Smile Haus Reviews</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f5f5f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.10);
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .logo-circle {
+      width: 44px;
+      height: 44px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text { line-height: 1.2; }
+    .logo-text strong { display: block; font-size: 15px; color: #1a1a2e; }
+    .logo-text span   { font-size: 12px; color: #888; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1a1a2e;
+      background: #fff;
+      margin-bottom: 18px;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    select:focus, input[type="password"]:focus {
+      border-color: #1a1a2e;
+    }
+
+    .pin-wrap {
+      position: relative;
+    }
+
+    .pin-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+      font-size: 13px;
+      padding: 4px;
+    }
+
+    .pin-wrap input {
+      padding-right: 44px;
+      margin-bottom: 18px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .btn-primary:hover { background: #2d2d4e; }
+    .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+    .error-msg {
+      background: #fff0f0;
+      border: 1.5px solid #f5c0c0;
+      color: #c0392b;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #888;
+      font-size: 14px;
+      min-height: 48px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ddd;
+      border-top-color: #1a1a2e;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-bar">
+      <div class="logo-circle">SH</div>
+      <div class="logo-text">
+        <strong>Smile Haus</strong>
+        <span>Employee Reviews</span>
+      </div>
+    </div>
+
+    <h1>Sign In</h1>
+    <p class="subtitle">Select your name and enter your 6-digit PIN.</p>
+
+    <div id="formArea">
+      <div id="loadingUsers" class="loading">
+        <div class="spinner"></div> Loading…
+      </div>
+
+      <form id="loginForm" style="display:none" onsubmit="handleLogin(event)">
+        <div id="errorMsg" class="error-msg"></div>
+
+        <label for="userSelect">Your Name</label>
+        <select id="userSelect" required>
+          <option value="">— Select your name —</option>
+        </select>
+
+        <label for="pinInput">PIN</label>
+        <div class="pin-wrap">
+          <input
+            type="password"
+            id="pinInput"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="••••••"
+            autocomplete="current-password"
+            required
+          />
+          <button type="button" class="pin-toggle" onclick="togglePin()" id="pinToggleBtn" title="Show/hide PIN">👁</button>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <p class="footer-note">Smile Haus Dental · Authorized Personnel Only</p>
+
+  <script src="shared.js"></script>
+  <script>
+    // If already authed, skip to home
+    (function () {
+      const t = getJwt();
+      if (t && !isJwtExpired(t)) window.location.href = 'index.html';
+    })();
+
+    async function loadUsers() {
+      try {
+        const res = await fetch(WORKER + '/auth/users');
+        const data = await res.json();
+        const sel = document.getElementById('userSelect');
+        (data.users || []).forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.uid;
+          opt.textContent = u.name;
+          sel.appendChild(opt);
+        });
+        document.getElementById('loadingUsers').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+      } catch (e) {
+        document.getElementById('loadingUsers').innerHTML =
+          '<span style="color:#c0392b">Could not load user list. Please refresh.</span>';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const uid = document.getElementById('userSelect').value;
+      const pin = document.getElementById('pinInput').value;
+      const errEl = document.getElementById('errorMsg');
+      const btn   = document.getElementById('submitBtn');
+
+      hideError(errEl);
+
+      if (!uid) { showError(errEl, 'Please select your name.'); return; }
+      if (!/^\d{6}$/.test(pin)) { showError(errEl, 'PIN must be exactly 6 digits.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch(WORKER + '/auth/pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: uid, pin }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          const msg = data.error || 'Invalid PIN. Please try again.';
+          showError(errEl, msg);
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+          return;
+        }
+
+        setJwt(data.token);
+        window.location.href = 'index.html';
+      } catch (err) {
+        showError(errEl, 'Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    function togglePin() {
+      const inp = document.getElementById('pinInput');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
