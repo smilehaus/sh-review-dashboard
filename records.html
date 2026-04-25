@@ -236,6 +236,46 @@
     }
     .btn-clickup:hover { background: #f5f3ff; }
 
+    .btn-reedit {
+      background: #fff;
+      color: #1a6e4a;
+      border-color: #b4d9c8;
+    }
+    .btn-reedit:hover { background: #edf7f2; }
+    .btn-reedit:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Comment cell */
+    .comment-cell { min-width: 180px; max-width: 240px; }
+    .comment-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .comment-textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 52px;
+      outline: none;
+      color: #1a1a2e;
+    }
+    .comment-textarea:focus { border-color: #1a1a2e; }
+    .btn-comment-save {
+      align-self: flex-end;
+      padding: 4px 10px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-comment-save:hover { background: #2d2d4e; }
+    .btn-comment-save:disabled { background: #aaa; cursor: not-allowed; }
+    .comment-saved-note { font-size: 11px; color: #0a7a56; align-self: flex-end; }
+
     /* Empty + loading states */
     .state-cell {
       text-align: center;
@@ -351,11 +391,12 @@
             <th>Form</th>
             <th>Score</th>
             <th>Date</th>
+            <th>Comments</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="7" class="state-cell">
+          <tr><td colspan="8" class="state-cell">
             <div class="icon"><span class="spinner-inline"></span></div>
             <p>Loading records…</p>
           </td></tr>
@@ -444,7 +485,7 @@
   function renderTable(rows) {
     const tbody = document.getElementById('tableBody');
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="state-cell">
+      tbody.innerHTML = `<tr><td colspan="8" class="state-cell">
         <div class="icon">🗂</div>
         <p>No records found.</p>
         <small>Drafts you save and reviews you submit will appear here.</small>
@@ -460,6 +501,7 @@
     const formLabel = (r.form_type || '').toUpperCase() || '—';
     const dateVal   = isDraft ? r.updated_at : r.submitted_at;
     const jwt = getJwt();
+    const recordId = isDraft ? r.id : r.task_id;
 
     // Status badge
     const badge = isDraft
@@ -475,6 +517,19 @@
         ? `<span class="score-val">${r.score}</span>`
         : `<span class="score-dash">—</span>`;
     }
+
+    // Comment cell
+    const safeComment = escHtml(r.comment || '');
+    const commentCell = `
+      <div class="comment-wrap" id="cmtwrap-${recordId}">
+        <textarea class="comment-textarea" id="cmt-${recordId}" rows="2"
+          placeholder="Add a note…">${safeComment}</textarea>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+          <span class="comment-saved-note" id="cmtnote-${recordId}" style="display:none">Saved ✓</span>
+          <button class="btn-comment-save" id="cmtbtn-${recordId}"
+            onclick="saveComment('${recordId}')">Save</button>
+        </div>
+      </div>`;
 
     // Actions
     let actions = '';
@@ -494,19 +549,30 @@
            onclick="addAuthHeader(event, '${pdfUrl}')">View PDF</a>
         <a class="btn-action btn-clickup" href="${cuUrl}" target="_blank">ClickUp ↗</a>
       `;
+      // Admin-only re-edit button
+      if (isAdmin()) {
+        actions += `<button class="btn-action btn-reedit" id="reopen-${r.task_id}"
+          onclick="reopenRecord('${r.task_id}', '${r.form_type || 'da'}')">Re-edit</button>`;
+      }
     }
 
     return `
-      <tr data-id="${r.id || r.task_id}">
+      <tr data-id="${recordId}">
         <td>${badge}</td>
         <td>${escHtml(r.employee_name || '—')}</td>
         <td>${escHtml(r.office || '—')}</td>
         <td><span class="chip">${formLabel}</span></td>
         <td>${scoreCell}</td>
         <td>${formatDate(dateVal)}</td>
+        <td class="comment-cell">${commentCell}</td>
         <td><div class="actions">${actions}</div></td>
       </tr>
     `;
+  }
+
+  function isAdmin() {
+    const p = parseJwtPayload(getJwt());
+    return p && p.role === 'Admin';
   }
 
   function escHtml(s) {
@@ -553,6 +619,60 @@
     } else {
       alert('Could not delete draft. Please try again.');
     }
+  }
+
+  // Save comment
+  async function saveComment(recordId) {
+    const textarea = document.getElementById('cmt-' + recordId);
+    const btn      = document.getElementById('cmtbtn-' + recordId);
+    const note     = document.getElementById('cmtnote-' + recordId);
+    if (!textarea || !btn) return;
+
+    const text = textarea.value.trim();
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    note.style.display = 'none';
+
+    const res = await apiFetch('/comment/' + encodeURIComponent(recordId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Save';
+
+    if (res && res.ok) {
+      note.style.display = 'inline';
+      setTimeout(() => { note.style.display = 'none'; }, 3000);
+    } else {
+      alert('Could not save comment. Please try again.');
+    }
+  }
+
+  // Re-edit a submitted review (Admin only) — creates a new draft pre-filled with metadata
+  async function reopenRecord(taskId, formType) {
+    const btn = document.getElementById('reopen-' + taskId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
+
+    const res = await apiFetch('/reopen/' + encodeURIComponent(taskId), { method: 'POST' });
+    if (!res || !res.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Re-edit'; }
+      alert('Could not reopen review. Please try again.');
+      return;
+    }
+
+    const data = await res.json();
+    const draftId = data.draft_id;
+    const jwt = getJwt();
+    const formBase = (formType || data.form_type || 'da') === 'rcm' ? RCM_FORM_URL : DA_FORM_URL;
+    const url = `${formBase}?draft=${encodeURIComponent(draftId)}&auth=${encodeURIComponent(jwt)}`;
+    window.open(url, '_blank');
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Re-edit'; }
+
+    // Reload records so the new draft shows up
+    await loadRecords();
   }
 
   loadRecords();
