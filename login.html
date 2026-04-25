@@ -271,7 +271,7 @@
         const res = await fetch(WORKER + '/auth/pin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: uid, pin }),
+          body: JSON.stringify({ uid, pin }),
         });
         const data = await res.json();
 
