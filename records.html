@@ -487,7 +487,7 @@
       `;
     } else {
       // submitted
-      const cuUrl = r.clickup_url || '#';
+      const cuUrl = r.clickup_url || r.task_url || '#';
       const pdfUrl = WORKER + '/records/' + encodeURIComponent(r.task_id) + '/pdf';
       actions = `
         <a class="btn-action btn-pdf" href="${pdfUrl}" target="_blank"
