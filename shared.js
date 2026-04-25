@@ -111,6 +111,10 @@ function renderUserBar(containerSelector) {
 
 function formatDate(ts) {
   if (!ts) return '—';
-  const d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
+  // Coerce numeric strings ("1745618400000") to number first
+  const n = typeof ts === 'string' && /^\d+$/.test(ts) ? Number(ts) : ts;
+  // ClickUp returns ms; epoch seconds are < 1e10
+  const d = new Date(typeof n === 'number' && n < 1e10 ? n * 1000 : n);
+  if (isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
