@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviewer Profiles — Smile Haus Reviews</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f0; min-height: 100vh; color: #1a1a2e; }
+
+    header {
+      background: #1a1a2e; color: #fff; padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 16px; }
+    .header-brand .dot { width: 10px; height: 10px; background: #4ecdc4; border-radius: 50%; }
+    .header-nav { display: flex; align-items: center; gap: 20px; }
+    .header-nav a { color: #ccc; text-decoration: none; font-size: 14px; transition: color .15s; }
+    .header-nav a:hover { color: #fff; }
+    .header-nav a.active { color: #4ecdc4; font-weight: 600; }
+    .user-bar { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .user-bar .user-name { font-weight: 600; color: #fff; }
+    .user-bar .user-role { color: #aaa; font-size: 12px; }
+    .user-bar .btn-ghost {
+      background: transparent; border: 1.5px solid #444; color: #ccc;
+      border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+    }
+    .user-bar .btn-ghost:hover { border-color: #ccc; color: #fff; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+    .page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .page-subtitle { font-size: 14px; color: #666; margin-bottom: 32px; }
+
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .profile-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow .15s, transform .15s;
+      display: block;
+      cursor: pointer;
+    }
+    .profile-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.13); transform: translateY(-2px); }
+
+    .profile-avatar {
+      width: 52px; height: 52px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    .profile-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .profile-role { font-size: 12px; color: #888; margin-bottom: 12px; }
+    .profile-offices { font-size: 12px; color: #666; margin-bottom: 14px; line-height: 1.5; }
+
+    .profile-stat {
+      display: flex; align-items: center; gap: 8px;
+      background: #f5f5f0; border-radius: 8px; padding: 10px 14px;
+    }
+    .profile-stat .stat-num { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+    .profile-stat .stat-label { font-size: 12px; color: #888; }
+
+    .my-profile-banner {
+      background: #1a1a2e; color: #fff;
+      border-radius: 12px; padding: 28px 24px;
+      margin-bottom: 28px; display: flex; align-items: center; gap: 20px;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .my-profile-banner:hover { background: #2d2d4e; }
+    .my-profile-banner .avatar {
+      width: 60px; height: 60px; background: #4ecdc4; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; color: #1a1a2e; flex-shrink: 0;
+    }
+    .my-profile-banner .info .name { font-size: 20px; font-weight: 700; }
+    .my-profile-banner .info .sub { font-size: 13px; color: #aaa; margin-top: 2px; }
+    .my-profile-banner .arrow { margin-left: auto; font-size: 22px; color: #4ecdc4; }
+
+    .loading { text-align: center; padding: 60px; color: #aaa; font-size: 15px; }
+    .spinner {
+      display: inline-block; width: 22px; height: 22px;
+      border: 2px solid #ddd; border-top-color: #1a1a2e;
+      border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      main { padding: 20px 16px; }
+      .header-nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand"><div class="dot"></div> Smile Haus Reviews</div>
+  <nav class="header-nav">
+    <a href="index.html">Home</a>
+    <a href="records.html">Records</a>
+    <a href="profiles.html" class="active">Profiles</a>
+  </nav>
+  <div class="user-bar" id="userBar"></div>
+</header>
+
+<main>
+  <h1 class="page-title">Reviewer Profiles</h1>
+  <p class="page-subtitle" id="subtitle">Loading…</p>
+  <div id="content"><div class="loading"><div class="spinner"></div><br>Loading profiles…</div></div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+  const token = requireAuth();
+  if (!token) throw new Error('auth');
+  renderUserBar('#userBar');
+
+  const me = parseJwtPayload(token);
+
+  async function load() {
+    if (me.role === 'Admin') {
+      await loadAdminView();
+    } else {
+      await loadOwnProfile();
+    }
+  }
+
+  async function loadAdminView() {
+    document.getElementById('subtitle').textContent = 'All reviewers and their submitted review history.';
+    const res = await apiFetch('/profiles');
+    if (!res) return;
+    const data = await res.json();
+    const profiles = data.profiles || [];
+
+    if (!profiles.length) {
+      document.getElementById('content').innerHTML = '<p style="color:#aaa;text-align:center;padding:40px">No profiles found.</p>';
+      return;
+    }
+
+    const html = `<div class="profiles-grid">${profiles.map(p => {
+      const initials = p.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const roleLabel = p.role === 'Admin' ? 'Admin' : p.role === 'Regional' ? 'Regional Manager' : 'Office Manager';
+      const offices = p.offices.includes('*') ? 'All Offices' : p.offices.join(', ');
+      return `
+        <a class="profile-card" href="profile.html?uid=${encodeURIComponent(p.uid)}">
+          <div class="profile-avatar">${initials}</div>
+          <div class="profile-name">${escHtml(p.name)}</div>
+          <div class="profile-role">${roleLabel}</div>
+          <div class="profile-offices">${escHtml(offices)}</div>
+          <div class="profile-stat">
+            <div>
+              <div class="stat-num">${p.submission_count}</div>
+              <div class="stat-label">reviews submitted</div>
+            </div>
+          </div>
+        </a>`;
+    }).join('')}</div>`;
+
+    document.getElementById('content').innerHTML = html;
+  }
+
+  async function loadOwnProfile() {
+    document.getElementById('subtitle').textContent = 'Your review submission history.';
+    const initials = me.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const banner = `
+      <a class="my-profile-banner" href="profile.html?uid=${encodeURIComponent(me.uid)}">
+        <div class="avatar">${initials}</div>
+        <div class="info">
+          <div class="name">${escHtml(me.name)}</div>
+          <div class="sub">View your review history →</div>
+        </div>
+        <div class="arrow">→</div>
+      </a>`;
+    document.getElementById('content').innerHTML = banner;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  load();
+</script>
+</body>
+</html>
