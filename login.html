@@ -189,7 +189,7 @@
     </div>
 
     <h1>Sign In</h1>
-    <p class="subtitle">Select your name and enter your 6-digit PIN.</p>
+    <p class="subtitle">Select your name and enter your PIN.</p>
 
     <div id="formArea">
       <div id="loadingUsers" class="loading">
@@ -210,7 +210,7 @@
             type="password"
             id="pinInput"
             inputmode="numeric"
-            maxlength="6"
+            maxlength="12"
             placeholder="••••••"
             autocomplete="current-password"
             required
@@ -262,7 +262,7 @@
       hideError(errEl);
 
       if (!uid) { showError(errEl, 'Please select your name.'); return; }
-      if (!/^\d{6}$/.test(pin)) { showError(errEl, 'PIN must be exactly 6 digits.'); return; }
+      if (!/^\d{4,12}$/.test(pin)) { showError(errEl, 'PIN must be 4–12 digits.'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Signing in…';
