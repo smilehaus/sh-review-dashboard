@@ -95,6 +95,61 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .btn-primary {
+      background: #1a1a2e; color: #fff; border: none; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-primary:hover { background: #2d2d4e; }
+    .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 12px; padding: 32px 28px;
+      width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+    }
+    .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .modal-hint { font-size: 13px; color: #888; margin-bottom: 22px; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 6px; }
+    .modal-field input, .modal-field select {
+      width: 100%; padding: 9px 12px; border: 1.5px solid #ddd; border-radius: 8px;
+      font-size: 14px; color: #1a1a2e; outline: none; transition: border-color .15s;
+    }
+    .modal-field input:focus, .modal-field select:focus { border-color: #1a1a2e; }
+    .offices-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 6px;
+    }
+    .offices-grid label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: 0; color: #333; cursor: pointer; }
+    .offices-grid input[type=checkbox] { width: 15px; height: 15px; accent-color: #1a1a2e; flex-shrink: 0; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+    .btn-cancel {
+      background: none; border: 1.5px solid #ddd; color: #555; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: border-color .15s;
+    }
+    .btn-cancel:hover { border-color: #999; }
+    .error-msg {
+      background: #fff0f0; border: 1.5px solid #f5c0c0; color: #c0392b;
+      border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none;
+    }
+
+    /* PIN success */
+    .pin-success { text-align: center; }
+    .pin-display {
+      background: #1a1a2e; color: #fff; border-radius: 10px;
+      padding: 20px 24px; margin: 20px 0;
+    }
+    .pin-display .pin-label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; opacity: .55; margin-bottom: 8px; }
+    .pin-display .pin-value { font-size: 36px; font-weight: 700; letter-spacing: .2em; font-family: monospace; }
+    .pin-display .pin-sub { font-size: 12px; opacity: .4; margin-top: 6px; }
+
     @media (max-width: 600px) {
       header { padding: 0 16px; }
       main { padding: 20px 16px; }
@@ -109,16 +164,92 @@
   <nav class="header-nav">
     <a href="index.html">Home</a>
     <a href="records.html">Records</a>
+    <a href="instructions.html">Instructions</a>
     <a href="profiles.html" class="active">Profiles</a>
   </nav>
   <div class="user-bar" id="userBar"></div>
 </header>
 
 <main>
-  <h1 class="page-title">Reviewer Profiles</h1>
-  <p class="page-subtitle" id="subtitle">Loading…</p>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;">
+    <div>
+      <h1 class="page-title" style="margin-bottom:0;">Reviewer Profiles</h1>
+      <p class="page-subtitle" id="subtitle" style="margin-bottom:0;">Loading…</p>
+    </div>
+    <button id="addProfileBtn" class="btn-primary" style="display:none;margin-top:6px;" onclick="openAddModal()">+ Add Profile</button>
+  </div>
+  <div style="margin-bottom:28px;"></div>
   <div id="content"><div class="loading"><div class="spinner"></div><br>Loading profiles…</div></div>
 </main>
+
+<!-- Add Profile Modal -->
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <h3>Add Reviewer Profile</h3>
+    <p class="modal-hint">A 6-digit PIN will be generated automatically and shown once. Save it to share with the new user.</p>
+    <div class="error-msg" id="addError"></div>
+
+    <div class="modal-field">
+      <label>Full Name</label>
+      <input type="text" id="newName" placeholder="e.g. Maria G." autocomplete="off">
+    </div>
+
+    <div class="modal-field">
+      <label>Role</label>
+      <select id="newRole">
+        <option value="">— Select role —</option>
+        <option value="OM">Office Manager</option>
+        <option value="Regional">Regional Manager</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+
+    <div class="modal-field">
+      <label>Offices</label>
+      <div style="margin-bottom:6px;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:#1a1a2e;cursor:pointer;">
+          <input type="checkbox" id="allOfficesCheck" onchange="toggleAllOffices(this)" style="width:15px;height:15px;accent-color:#1a1a2e;">
+          All Offices (Admin / Regional)
+        </label>
+      </div>
+      <div class="offices-grid" id="officesGrid">
+        <label><input type="checkbox" value="Georgetown"> Georgetown</label>
+        <label><input type="checkbox" value="On the Square"> On the Square</label>
+        <label><input type="checkbox" value="Austin"> Austin</label>
+        <label><input type="checkbox" value="Implant Center"> Implant Center</label>
+        <label><input type="checkbox" value="Medical Parkway"> Medical Parkway</label>
+        <label><input type="checkbox" value="Arboretum"> Arboretum</label>
+        <label><input type="checkbox" value="Pflugerville"> Pflugerville</label>
+        <label><input type="checkbox" value="South Austin"> South Austin</label>
+        <label><input type="checkbox" value="New Braunfels Dental Arts"> New Braunfels Dental Arts</label>
+        <label><input type="checkbox" value="Anderson Mill"> Anderson Mill</label>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="addSubmitBtn" onclick="submitAddProfile()">Create Profile</button>
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN reveal modal -->
+<div class="modal-overlay" id="pinModal" onclick="if(event.target===this)closePinModal()">
+  <div class="modal" style="max-width:400px;">
+    <div class="pin-success">
+      <div style="font-size:40px;margin-bottom:10px;">✅</div>
+      <h3>Profile Created</h3>
+      <p style="font-size:14px;color:#666;margin-top:6px;">Share this PIN with <strong id="pinForName"></strong> directly. It won't be shown again.</p>
+      <div class="pin-display">
+        <div class="pin-label">Temporary PIN</div>
+        <div class="pin-value" id="pinValue">——</div>
+        <div class="pin-sub">One-time display — save before closing</div>
+      </div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:20px;">Login ID: <code id="pinUid" style="background:#f5f5f0;padding:2px 6px;border-radius:4px;"></code></p>
+      <button class="btn-primary" style="width:100%;" onclick="closePinModal()">Done</button>
+    </div>
+  </div>
+</div>
 
 <script src="shared.js"></script>
 <script>
@@ -127,6 +258,11 @@
   renderUserBar('#userBar');
 
   const me = parseJwtPayload(token);
+
+  // Show Add Profile button for Admins
+  if (me.role === 'Admin') {
+    document.getElementById('addProfileBtn').style.display = 'inline-block';
+  }
 
   async function load() {
     if (me.role === 'Admin') {
@@ -187,6 +323,78 @@
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Add Profile ──────────────────────────────────────────────────────────────
+
+  function openAddModal() {
+    document.getElementById('newName').value = '';
+    document.getElementById('newRole').value = '';
+    document.getElementById('allOfficesCheck').checked = false;
+    document.querySelectorAll('#officesGrid input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.getElementById('officesGrid').style.opacity = '1';
+    document.getElementById('officesGrid').style.pointerEvents = '';
+    document.getElementById('addError').style.display = 'none';
+    document.getElementById('addModal').classList.add('show');
+    setTimeout(() => document.getElementById('newName').focus(), 80);
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModal').classList.remove('show');
+  }
+
+  function closePinModal() {
+    document.getElementById('pinModal').classList.remove('show');
+    load(); // refresh profile grid to show new card
+  }
+
+  function toggleAllOffices(cb) {
+    const grid = document.getElementById('officesGrid');
+    grid.style.opacity = cb.checked ? '0.4' : '1';
+    grid.style.pointerEvents = cb.checked ? 'none' : '';
+    if (cb.checked) document.querySelectorAll('#officesGrid input[type=checkbox]').forEach(c => c.checked = false);
+  }
+
+  async function submitAddProfile() {
+    const name  = document.getElementById('newName').value.trim();
+    const role  = document.getElementById('newRole').value;
+    const allOff = document.getElementById('allOfficesCheck').checked;
+    const errEl = document.getElementById('addError');
+    errEl.style.display = 'none';
+
+    if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; return; }
+    if (!role) { errEl.textContent = 'Select a role.'; errEl.style.display = 'block'; return; }
+
+    let offices;
+    if (allOff) {
+      offices = ['*'];
+    } else {
+      offices = [...document.querySelectorAll('#officesGrid input[type=checkbox]:checked')].map(cb => cb.value);
+      if (!offices.length) { errEl.textContent = 'Select at least one office, or check All Offices.'; errEl.style.display = 'block'; return; }
+    }
+
+    const btn = document.getElementById('addSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Creating…';
+
+    try {
+      const res = await apiFetch('/admin/create-user', {
+        method: 'POST',
+        body: JSON.stringify({ name, role, offices }),
+      });
+      if (!res) return; // auth redirect handled by apiFetch
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Failed to create profile.'; errEl.style.display = 'block'; return; }
+
+      closeAddModal();
+      document.getElementById('pinForName').textContent = data.name;
+      document.getElementById('pinValue').textContent   = data.pin;
+      document.getElementById('pinUid').textContent     = data.uid;
+      document.getElementById('pinModal').classList.add('show');
+    } catch (e) {
+      errEl.textContent = 'Network error — try again.'; errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Profile';
+    }
   }
 
   load();
