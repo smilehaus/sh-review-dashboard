@@ -140,6 +140,13 @@
       border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none;
     }
 
+    .pin-edit-btn {
+      background: #f5f5f0; border: 1.5px solid #ddd; border-radius: 7px;
+      padding: 5px 10px; font-size: 12px; font-weight: 600; color: #555;
+      cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0;
+    }
+    .pin-edit-btn:hover { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
     /* PIN success */
     .pin-success { text-align: center; }
     .pin-display {
@@ -233,6 +240,23 @@
   </div>
 </div>
 
+<!-- PIN editor modal -->
+<div class="modal-overlay" id="pinEditModal" onclick="if(event.target===this)closePinEditModal()">
+  <div class="modal" style="max-width:400px;">
+    <h3>Set PIN — <span id="pinEditName"></span></h3>
+    <p class="modal-hint">Enter a new PIN (4–12 digits), or leave blank to auto-generate a 6-digit PIN.</p>
+    <div class="error-msg" id="pinEditError"></div>
+    <div class="modal-field">
+      <label>New PIN <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa;">(leave blank to auto-generate)</span></label>
+      <input type="text" id="pinEditValue" placeholder="e.g. 123456" inputmode="numeric" maxlength="12" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="pinEditSubmitBtn" onclick="submitPinEdit()">Save PIN</button>
+      <button class="btn-cancel" onclick="closePinEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- PIN reveal modal -->
 <div class="modal-overlay" id="pinModal" onclick="if(event.target===this)closePinModal()">
   <div class="modal" style="max-width:400px;">
@@ -289,18 +313,23 @@
       const roleLabel = p.role === 'Admin' ? 'Admin' : p.role === 'Regional' ? 'Regional Manager' : 'Office Manager';
       const offices = p.offices.includes('*') ? 'All Offices' : p.offices.join(', ');
       return `
-        <a class="profile-card" href="profile.html?uid=${encodeURIComponent(p.uid)}">
-          <div class="profile-avatar">${initials}</div>
-          <div class="profile-name">${escHtml(p.name)}</div>
-          <div class="profile-role">${roleLabel}</div>
-          <div class="profile-offices">${escHtml(offices)}</div>
-          <div class="profile-stat">
-            <div>
-              <div class="stat-num">${p.submission_count}</div>
-              <div class="stat-label">reviews submitted</div>
-            </div>
+        <div class="profile-card" style="cursor:default;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <div class="profile-avatar" style="margin-bottom:0;flex-shrink:0;">${initials}</div>
+            <button class="pin-edit-btn" onclick="openPinEdit('${escHtml(p.uid)}','${escHtml(p.name)}')" title="Set / reset PIN">🔑 PIN</button>
           </div>
-        </a>`;
+          <a href="profile.html?uid=${encodeURIComponent(p.uid)}" style="text-decoration:none;color:inherit;">
+            <div class="profile-name">${escHtml(p.name)}</div>
+            <div class="profile-role">${roleLabel}</div>
+            <div class="profile-offices">${escHtml(offices)}</div>
+            <div class="profile-stat">
+              <div>
+                <div class="stat-num">${p.submission_count}</div>
+                <div class="stat-label">reviews submitted</div>
+              </div>
+            </div>
+          </a>
+        </div>`;
     }).join('')}</div>`;
 
     document.getElementById('content').innerHTML = html;
@@ -323,6 +352,58 @@
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Edit PIN ─────────────────────────────────────────────────────────────────
+
+  let _pinEditUid = '', _pinEditUserName = '';
+
+  function openPinEdit(uid, name) {
+    _pinEditUid = uid; _pinEditUserName = name;
+    document.getElementById('pinEditName').textContent = name;
+    document.getElementById('pinEditValue').value = '';
+    document.getElementById('pinEditError').style.display = 'none';
+    document.getElementById('pinEditModal').classList.add('show');
+    setTimeout(() => document.getElementById('pinEditValue').focus(), 80);
+  }
+
+  function closePinEditModal() {
+    document.getElementById('pinEditModal').classList.remove('show');
+  }
+
+  async function submitPinEdit() {
+    const pin    = document.getElementById('pinEditValue').value.trim();
+    const errEl  = document.getElementById('pinEditError');
+    errEl.style.display = 'none';
+
+    if (pin && !/^\d{4,12}$/.test(pin)) {
+      errEl.textContent = 'PIN must be 4–12 digits only.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('pinEditSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    try {
+      const body = { uid: _pinEditUid };
+      if (pin) body.pin = pin;
+      const res = await apiFetch('/admin/set-pin', { method: 'POST', body: JSON.stringify(body) });
+      if (!res) return;
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Failed to update PIN.'; errEl.style.display = 'block'; return; }
+
+      closePinEditModal();
+      // Reuse PIN reveal modal
+      document.getElementById('pinForName').textContent = data.name;
+      document.getElementById('pinValue').textContent   = data.pin;
+      document.getElementById('pinUid').textContent     = data.uid;
+      document.getElementById('pinModal').classList.add('show');
+    } catch (e) {
+      errEl.textContent = 'Network error — try again.'; errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save PIN';
+    }
   }
 
   // ── Add Profile ──────────────────────────────────────────────────────────────
