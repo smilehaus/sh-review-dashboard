@@ -355,6 +355,15 @@
         <div class="card-action">Start Review <span class="card-arrow">→</span></div>
       </a>
 
+      <!-- PC Annual Review -->
+      <a class="form-card" href="https://smilehaus.github.io/sh-pc-review-form/" id="pcCard">
+        <div class="card-icon purple">🗓️</div>
+        <span class="card-tag">PC · Annual</span>
+        <div class="card-title">Patient Coordinator<br>Annual Review</div>
+        <div class="card-desc">KPI scoring, case acceptance, schedule management, tier advancement, and raise calculation for Patient Coordinators.</div>
+        <div class="card-action">Start Review <span class="card-arrow">→</span></div>
+      </a>
+
       <!-- RCM Manager Review -->
       <a class="form-card" href="https://smilehaus.github.io/sh-rcm-review-form/" id="rcmCard">
         <div class="card-icon indigo">📋</div>
@@ -405,6 +414,8 @@
         'https://smilehaus.github.io/sh-rcm-review-form/?auth=' + encodeURIComponent(jwt);
       document.getElementById('da90Card').href =
         'https://smilehaus.github.io/sh-da-90day-review-form/?auth=' + encodeURIComponent(jwt);
+      document.getElementById('pcCard').href =
+        'https://smilehaus.github.io/sh-pc-review-form/?auth=' + encodeURIComponent(jwt);
     }
   }
 
