@@ -327,6 +327,15 @@
         <div class="card-action">Start Review <span class="card-arrow">→</span></div>
       </a>
 
+      <!-- PC 90-Day Review -->
+      <a class="form-card" href="https://smilehaus.github.io/sh-pc-90-day-review-form/" id="pc90Card">
+        <div class="card-icon purple">🗓️</div>
+        <span class="card-tag">PC · 90-Day</span>
+        <div class="card-title">Patient Coordinator<br>90-Day Review</div>
+        <div class="card-desc">Tier competency check, KPI scoring, schedule management, case acceptance support, and structured feedback for new PCs at the 90-day mark.</div>
+        <div class="card-action">Start Review <span class="card-arrow">→</span></div>
+      </a>
+
     </div>
 
     <!-- Records Quick Access -->
@@ -382,6 +391,15 @@
         <div class="card-action">Start Review <span class="card-arrow">→</span></div>
       </a>
 
+      <!-- RDH Annual Review -->
+      <a class="form-card" href="https://smilehaus.github.io/sh-hyg-review-form/" id="hygCard">
+        <div class="card-icon pink">🦷</div>
+        <span class="card-tag">RDH · Annual</span>
+        <div class="card-title">Dental Hygienist<br>Annual Review</div>
+        <div class="card-desc">Clinical excellence, patient experience, team leadership, KPI scoring, tier advancement, and raise calculation for Dental Hygienists.</div>
+        <div class="card-action">Start Review <span class="card-arrow">→</span></div>
+      </a>
+
     </div>
 
     <!-- Records Quick Access -->
@@ -427,6 +445,10 @@
         'https://smilehaus.github.io/sh-pc-review-form/?auth=' + encodeURIComponent(jwt);
       document.getElementById('omCard').href =
         'https://smilehaus.github.io/sh-om-review-form/?auth=' + encodeURIComponent(jwt);
+      document.getElementById('pc90Card').href =
+        'https://smilehaus.github.io/sh-pc-90-day-review-form/?auth=' + encodeURIComponent(jwt);
+      document.getElementById('hygCard').href =
+        'https://smilehaus.github.io/sh-hyg-review-form/?auth=' + encodeURIComponent(jwt);
     }
   }
 
