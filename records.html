@@ -348,6 +348,7 @@
   <nav class="header-nav">
     <a href="index.html">Home</a>
     <a href="records.html" class="active">Records</a>
+    <a href="instructions.html">Instructions</a>
     <a href="profiles.html">Profiles</a>
   </nav>
   <div class="user-bar" id="userBar"></div>
@@ -373,6 +374,9 @@
       <option value="">All Forms</option>
       <option value="da">DA</option>
       <option value="rcm">RCM</option>
+      <option value="rdh">RDH</option>
+      <option value="pc_90day">PC 90-Day</option>
+      <option value="om">OM</option>
     </select>
     <select id="statusFilter" class="filter-select" onchange="applyFilters()">
       <option value="">All Statuses</option>
@@ -424,8 +428,10 @@
 
 <script src="shared.js"></script>
 <script>
-  const DA_FORM_URL  = 'https://smilehaus.github.io/sh-da-review-form/';
-  const RCM_FORM_URL = 'https://smilehaus.github.io/sh-rcm-review-form/';
+  const DA_FORM_URL   = 'https://smilehaus.github.io/sh-da-review-form/';
+  const RCM_FORM_URL  = 'https://smilehaus.github.io/sh-rcm-review-form/';
+  const HYG_FORM_URL  = 'https://smilehaus.github.io/sh-hyg-review-form/';
+  const PC90_FORM_URL = 'https://smilehaus.github.io/sh-pc-90-day-review-form/';
 
   let allRecords = [];
   let pendingDeleteId = null;
@@ -535,7 +541,10 @@
     // Actions
     let actions = '';
     if (isDraft) {
-      const formBase = r.form_type === 'rcm' ? RCM_FORM_URL : DA_FORM_URL;
+      const formBase = r.form_type === 'rcm'     ? RCM_FORM_URL
+                     : r.form_type === 'rdh'     ? HYG_FORM_URL
+                     : r.form_type === 'pc_90day' ? PC90_FORM_URL
+                     : DA_FORM_URL;
       const resumeUrl = `${formBase}?draft=${encodeURIComponent(r.id)}&auth=${encodeURIComponent(jwt)}`;
       actions = `
         <a class="btn-action btn-resume" href="${resumeUrl}" target="_blank">Resume</a>
