@@ -432,6 +432,7 @@
   const RCM_FORM_URL  = 'https://smilehaus.github.io/sh-rcm-review-form/';
   const HYG_FORM_URL  = 'https://smilehaus.github.io/sh-hyg-review-form/';
   const PC90_FORM_URL = 'https://smilehaus.github.io/sh-pc-90-day-review-form/';
+  const OM_FORM_URL   = 'https://smilehaus.github.io/sh-om-review-form/';
 
   let allRecords = [];
   let pendingDeleteId = null;
@@ -541,9 +542,10 @@
     // Actions
     let actions = '';
     if (isDraft) {
-      const formBase = r.form_type === 'rcm'     ? RCM_FORM_URL
-                     : r.form_type === 'rdh'     ? HYG_FORM_URL
+      const formBase = r.form_type === 'rcm'      ? RCM_FORM_URL
+                     : r.form_type === 'rdh'      ? HYG_FORM_URL
                      : r.form_type === 'pc_90day' ? PC90_FORM_URL
+                     : r.form_type === 'om'       ? OM_FORM_URL
                      : DA_FORM_URL;
       const resumeUrl = `${formBase}?draft=${encodeURIComponent(r.id)}&auth=${encodeURIComponent(jwt)}`;
       actions = `
