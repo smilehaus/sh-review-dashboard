@@ -677,7 +677,8 @@
     const data = await res.json();
     const draftId = data.draft_id;
     const jwt = getJwt();
-    const formBase = (formType || data.form_type || 'da') === 'rcm' ? RCM_FORM_URL : DA_FORM_URL;
+    const ft = formType || data.form_type || 'da';
+    const formBase = ft === 'rcm' ? RCM_FORM_URL : ft === 'rdh' ? HYG_FORM_URL : DA_FORM_URL;
     const url = `${formBase}?draft=${encodeURIComponent(draftId)}&auth=${encodeURIComponent(jwt)}`;
     window.open(url, '_blank');
 
